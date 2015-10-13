@@ -10,10 +10,12 @@ int main(int argc, char const *argv[])
 
 	string server_ip = argv[1];
 	Connection connection_temperature(server_ip, TEMPERATURE_PORT);
-	Connection connection_air(server_ip, AIR_CONTROLLER_PORT);
+	// Connection connection_air(server_ip, AIR_CONTROLLER_PORT);
 
 	connection_temperature.server_connection();
-	connection_air.server_connection();
+	// connection_air.server_connection();
+
+	connection_temperature.accept_connections();
 
 	return 0;
 }

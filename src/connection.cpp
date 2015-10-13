@@ -13,6 +13,7 @@
 #define ERROR_BIND -4
 #define ERROR_LISTEN -5
 #define ERROR_RECV -6
+#define ERROR_SEND -7
 #define QUEUE_LISTEN 10
 
 using std::cerr;
@@ -27,6 +28,23 @@ Connection::~Connection()
 {
 	if (socket_descriptor)
 		close(socket_descriptor);
+}
+
+int
+Connection::do_connect(struct sockaddr_in* server_addr)
+{
+	int descriptor = socket(AF_INET, SOCK_STREAM, 0);
+
+	if (descriptor == -1)
+		errx(ERROR_SOCKET, "Fail in socket function!");
+
+	bzero((char *) server_addr, sizeof(*server_addr));
+
+	server_addr->sin_family = AF_INET;
+    server_addr->sin_port = htons(server_port);
+    server_addr->sin_addr.s_addr = inet_addr(server_ip.c_str());
+
+    return descriptor;
 }
 
 void
@@ -52,21 +70,17 @@ Connection::server_connection()
 		errx(ERROR_LISTEN, "Fail in listen function!");
 }
 
-int
-Connection::do_connect(struct sockaddr_in* server_addr)
+void
+Connection::get_temperature()
 {
-	int descriptor = socket(AF_INET, SOCK_STREAM, 0);
+	string message = "get_temperature";
+	int size = message.size() + 1;
 
-	if (descriptor == -1)
-		errx(ERROR_SOCKET, "Fail in socket function!");
+	if (send(socket_descriptor, &size, sizeof(size), 0) < 0)
+		errx(ERROR_SEND, "Fail in send function!");
 
-	bzero((char *) server_addr, sizeof(*server_addr));
-
-	server_addr->sin_family = AF_INET;
-    server_addr->sin_port = htons(server_port);
-    server_addr->sin_addr.s_addr = inet_addr(server_ip.c_str());
-
-    return descriptor;
+	if (send(socket_descriptor, "get_temperature", size, 0) < 0)
+		errx(ERROR_SEND, "Fail in send function!");
 }
 
 void
@@ -85,10 +99,10 @@ Connection::accept_connections()
 			continue;
 		}
 
-		pid_t pid = fork();
+		// pid_t pid = fork();
 
-		if (pid == 0)
-			receive_messages(client_id);
+		// if (pid == 0)
+		// 	receive_messages(client_id);
 	}
 }
 

@@ -23,6 +23,7 @@ int main(int argc, char const *argv[])
 
 	bool execute = true;
 	while(execute) {
+		connection_temperature.get_temperature();
 		int option = Controller::show_menu(status_air, temperature);
 		
 		switch(option)
