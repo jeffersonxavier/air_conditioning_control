@@ -15,7 +15,6 @@ Controller::exit_program()
 
 	cout << "Saindo!" << endl;
 	wait_time();
-	exit(0);
 }
 
 void
