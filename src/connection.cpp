@@ -12,13 +12,14 @@
 #define ERROR_CONNECT -3
 #define ERROR_BIND -4
 #define ERROR_LISTEN -5
+#define ERROR_RECV -6
 #define QUEUE_LISTEN 10
 
 using std::cerr;
 using std::endl;
 
 Connection::Connection(string server_ip, int server_port)
-	: server_ip(server_ip), server_port(server_port), socket_descriptor(0), client_id(0)
+	: server_ip(server_ip), server_port(server_port), socket_descriptor(0)
 {
 }
 
@@ -76,12 +77,33 @@ Connection::accept_connections()
 	
 	while(true)
 	{
-		client_id = accept(socket_descriptor, (struct sockaddr *) &client, &client_len);
+		int client_id = accept(socket_descriptor, (struct sockaddr *) &client, &client_len);
 
 		if (client_id < 0)
 		{
 			cerr << "Fail in accept function!" << endl;
 			continue;
 		}
+
+		pid_t pid = fork();
+
+		if (pid == 0)
+			receive_messages(client_id);
 	}
+}
+
+void
+Connection::receive_messages(int client_id)
+{
+	int length;
+
+	if (recv(client_id, &length, sizeof(length), 0) <= 0)
+		errx(ERROR_RECV, "Fail in recv function!");
+
+	char* message = (char*) malloc(length);
+
+	if (recv(client_id, message, length, 0) <= 0)
+		errx(ERROR_RECV, "Fail in recv function!");
+
+	free(message);
 }

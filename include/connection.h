@@ -15,12 +15,12 @@ public:
 	void client_connection();
 	void server_connection();
 	void accept_connections();
+	void receive_messages(int client_id);
 
 private:
 	string server_ip;
 	int server_port;
 	int socket_descriptor;
-	int client_id;
 
 	int do_connect(struct sockaddr_in* server_addr);
 };
