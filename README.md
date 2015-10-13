@@ -1,1 +1,3 @@
-# air_conditioning_control
+# Air Conditioning Control
+
+Exercise using sockets, raspberry uart!
