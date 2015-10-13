@@ -1,35 +1,23 @@
 SRC_DIR = src
+CLIENT_DIR = src/client
+SERVER_DIR = src/server
 OBJ_DIR = obj
 BIN_DIR = bin
 
 CC = g++
 
-CFLAGS = -W -Wall -pedantic -ansi -std=c++11 -MMD -g3
+CFLAGS = -W -Wall -pedantic -ansi -std=c++11
 INCLUDES = -Iinclude
-
-CLIENT = $(BIN_DIR)/client
-
-SRC = ${wildcard $(SRC_DIR)/*.cpp}
-OBJ = ${addprefix $(OBJ_DIR)/, ${notdir ${SRC:.cpp=.o}}} 
 
 .PHONY: clean depend
 
-all:
-	@mkdir -p $(OBJ_DIR) $(LIB_DIR) $(BIN_DIR)
-	$(MAKE) $(CLIENT)
+client:
+	$(CC) -o $(BIN_DIR)/client $(INCLUDES) $(SRC_DIR)/*.cpp $(CLIENT_DIR)/*.cpp $(CFLAGS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@echo Building $@
-	@$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
-
-$(CLIENT): $(OBJ)
-	@echo Building executable...
-	@$(CC) $(CFLAGS) $(INCLUDES) -o $@ $(OBJ) $(LIBS)
-	@echo Done!
+server:
+	$(CC) -o $(BIN_DIR)/server $(INCLUDES) $(SRC_DIR)/*.cpp $(SERVER_DIR)/*.cpp $(CFLAGS)
 
 clean:
 	@echo Cleaning...
-	@rm -rf obj/ bin/ *~
+	@rm -rf obj/ bin/* *~
 	@echo Done!
-
--include $(OBJ:.o=.d)

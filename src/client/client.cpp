@@ -5,19 +5,22 @@
 #include <err.h>
 
 #define ERROR_PARAMS -1
+
 int main(int argc, char const *argv[])
 {
-	if (argc < 2)
+	if (argc < 1)
 		errx(ERROR_PARAMS, "Invalid number of params");
 
 	bool status_air = false;
 	double temperature = 0.0;
 
 	string server_ip = argv[1];
-	int server_port = atoi(argv[2]);
 
-	Connection* connection = Connection::initialize(server_ip, server_port);
-	connection->client_connection();
+	Connection connection_temperature(server_ip, TEMPERATURE_PORT);
+	Connection connection_air(server_ip, AIR_CONTROLLER_PORT);
+
+	connection_temperature.client_connection();
+	connection_air.client_connection();
 
 	bool execute = true;
 	while(execute) {
