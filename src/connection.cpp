@@ -10,6 +10,9 @@
 
 #define ERROR_SOCKET -2
 #define ERROR_CONNECT -3
+#define ERROR_BIND -4
+#define ERROR_LISTEN -5
+#define QUEUE_LISTEN 10
 
 Connection::Connection(string server_ip, int server_port)
 	: server_ip(server_ip), server_port(server_port), client_descriptor(0), server_descriptor(0)
@@ -31,10 +34,7 @@ Connection::client_connection()
 	client_descriptor = do_connect(&server_addr);
 
     if (connect(client_descriptor,(struct sockaddr *) &server_addr, sizeof(server_addr)) < 0)
-    {
-    	close(client_descriptor);
-		errx(ERROR_CONNECT, "Fail in connect function!");    	
-    }
+		errx(ERROR_CONNECT, "Fail in connect function!");
 }
 
 void
@@ -42,6 +42,12 @@ Connection::server_connection()
 {
 	struct sockaddr_in server_addr;
 	server_descriptor = do_connect(&server_addr);
+
+	if (bind(server_descriptor, (struct sockaddr *) &server_addr, sizeof(struct sockaddr)) < 0)
+		errx(ERROR_BIND, "Fail in bind function!");
+
+	if (listen(server_descriptor, QUEUE_LISTEN) < 0)
+		errx(ERROR_LISTEN, "Erro ao executar o linten");
 }
 
 int

@@ -5,12 +5,15 @@
 
 int main(int argc, char const *argv[])
 {
-	if (argc < 1)
+	if (argc < 2)
 		errx(ERROR_PARAMS, "Invalid number of params");
 
 	string server_ip = argv[1];
 	Connection connection_temperature(server_ip, TEMPERATURE_PORT);
 	Connection connection_air(server_ip, AIR_CONTROLLER_PORT);
+
+	connection_temperature.server_connection();
+	connection_air.server_connection();
 
 	return 0;
 }

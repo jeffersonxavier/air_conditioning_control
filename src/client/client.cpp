@@ -8,7 +8,7 @@
 
 int main(int argc, char const *argv[])
 {
-	if (argc < 1)
+	if (argc < 2)
 		errx(ERROR_PARAMS, "Invalid number of params");
 
 	bool status_air = false;
