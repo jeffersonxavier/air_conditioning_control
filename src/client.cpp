@@ -1,13 +1,23 @@
-#include <iostream>
 #include "screen.h"
-
-using namespace std;
+#include "controller.h"
 
 int main()
 {
-	Screen::clear();
+	bool status_air = false;
+	double temperature = 0.0;
+	
+	int option = Screen::show_menu(status_air, temperature);
 
-	//Informations, status air, environment temperature
-	cout << "Sistema de Controle de Ar condicionado" << endl;
+	switch(option)
+	{
+		case 1:
+		case 2:
+			Controller::exit_program();
+		default:
+			Controller::invalid_option();
+			Screen::show_menu(true, 0);
+			break;
+	}
+
 	return 0;
 }
