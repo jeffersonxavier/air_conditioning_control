@@ -14,12 +14,13 @@ public:
 	~Connection();
 	void client_connection();
 	void server_connection();
+	void accept_connections();
 
 private:
 	string server_ip;
 	int server_port;
-	int client_descriptor;
-	int server_descriptor;
+	int socket_descriptor;
+	int client_id;
 
 	int do_connect(struct sockaddr_in* server_addr);
 };

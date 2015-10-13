@@ -1,5 +1,4 @@
 #include "connection.h"
-#include "screen.h"
 #include "controller.h"
 #include <cstdlib>
 #include <err.h>
@@ -24,7 +23,7 @@ int main(int argc, char const *argv[])
 
 	bool execute = true;
 	while(execute) {
-		int option = Screen::show_menu(status_air, temperature);
+		int option = Controller::show_menu(status_air, temperature);
 		
 		switch(option)
 		{

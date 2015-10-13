@@ -14,26 +14,27 @@
 #define ERROR_LISTEN -5
 #define QUEUE_LISTEN 10
 
+using std::cerr;
+using std::endl;
+
 Connection::Connection(string server_ip, int server_port)
-	: server_ip(server_ip), server_port(server_port), client_descriptor(0), server_descriptor(0)
+	: server_ip(server_ip), server_port(server_port), socket_descriptor(0), client_id(0)
 {
 }
 
 Connection::~Connection()
 {
-	if (client_descriptor)
-		close(client_descriptor);
-	if (server_descriptor)
-		close(server_descriptor);
+	if (socket_descriptor)
+		close(socket_descriptor);
 }
 
 void
 Connection::client_connection()
 {
 	struct sockaddr_in server_addr;
-	client_descriptor = do_connect(&server_addr);
+	socket_descriptor = do_connect(&server_addr);
 
-    if (connect(client_descriptor,(struct sockaddr *) &server_addr, sizeof(server_addr)) < 0)
+    if (connect(socket_descriptor,(struct sockaddr *) &server_addr, sizeof(server_addr)) < 0)
 		errx(ERROR_CONNECT, "Fail in connect function!");
 }
 
@@ -41,13 +42,13 @@ void
 Connection::server_connection()
 {
 	struct sockaddr_in server_addr;
-	server_descriptor = do_connect(&server_addr);
+	socket_descriptor = do_connect(&server_addr);
 
-	if (bind(server_descriptor, (struct sockaddr *) &server_addr, sizeof(struct sockaddr)) < 0)
+	if (bind(socket_descriptor, (struct sockaddr *) &server_addr, sizeof(struct sockaddr)) < 0)
 		errx(ERROR_BIND, "Fail in bind function!");
 
-	if (listen(server_descriptor, QUEUE_LISTEN) < 0)
-		errx(ERROR_LISTEN, "Erro ao executar o linten");
+	if (listen(socket_descriptor, QUEUE_LISTEN) < 0)
+		errx(ERROR_LISTEN, "Fail in listen function!");
 }
 
 int
@@ -65,4 +66,22 @@ Connection::do_connect(struct sockaddr_in* server_addr)
     server_addr->sin_addr.s_addr = inet_addr(server_ip.c_str());
 
     return descriptor;
+}
+
+void
+Connection::accept_connections()
+{
+	struct sockaddr_in client;
+	socklen_t client_len;
+	
+	while(true)
+	{
+		client_id = accept(socket_descriptor, (struct sockaddr *) &client, &client_len);
+
+		if (client_id < 0)
+		{
+			cerr << "Fail in accept function!" << endl;
+			continue;
+		}
+	}
 }
