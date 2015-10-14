@@ -10,7 +10,7 @@ public:
 	int show_menu(bool status_air);
 	void exit_program();
 	void invalid_option();
-	void* temperature_controller(Connection connection);
+	void temperature_controller(Connection connection);
 
 private:
 	Controller();
@@ -19,3 +19,5 @@ private:
 
 	double temperature;
 };
+
+extern void* update_temperature(void* conn);

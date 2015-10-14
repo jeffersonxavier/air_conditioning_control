@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <stdio.h>
 
 using std::cin;
 using std::cout;
@@ -93,11 +95,22 @@ Controller::wait_time()
 	}
 }
 
-void*
+void
 Controller::temperature_controller(Connection connection)
 {
-	connection.client_connection();
-	temperature = connection.get_temperature();
+	pthread_t temperature_thread;
+	pthread_create(&temperature_thread, nullptr, &update_temperature, &connection);
+}
 
+void*
+update_temperature(void* conn)
+{
+	Connection *connection = (Connection*) conn;
+
+	connection->client_connection();
+	double temperature = connection->get_temperature();
+	
+	printf("Esta na funcao teste\n");
+	printf("%f\n", temperature);
 	return nullptr;
 }
