@@ -16,7 +16,7 @@ public:
 	void server_connection();
 	void accept_connections();
 	void receive_messages(int client_id);
-	void get_temperature();
+	double get_temperature();
 
 private:
 	string server_ip;

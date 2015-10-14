@@ -11,31 +11,28 @@ int main(int argc, char const *argv[])
 		errx(ERROR_PARAMS, "Invalid number of params");
 
 	bool status_air = false;
-	double temperature = 0.0;
 
 	string server_ip = argv[1];
 
 	Connection connection_temperature(server_ip, TEMPERATURE_PORT);
-	Connection connection_air(server_ip, AIR_CONTROLLER_PORT);
 
-	connection_temperature.client_connection();
-	connection_air.client_connection();
+	Controller* controller = Controller::get_instance();
+	controller->temperature_controller(connection_temperature);
 
 	bool execute = true;
 	while(execute) {
-		connection_temperature.get_temperature();
-		int option = Controller::show_menu(status_air, temperature);
+		int option = controller->show_menu(status_air);
 		
 		switch(option)
 		{
 			case 1:
 				break;
 			case 2:
-				Controller::exit_program();
+				controller->exit_program();
 				execute = false;
 				break;
 			default:
-				Controller::invalid_option();
+				controller->invalid_option();
 				break;
 		}
 	}

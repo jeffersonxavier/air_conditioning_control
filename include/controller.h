@@ -1,13 +1,21 @@
 #pragma once
 
+class Connection;
+
 class Controller
 {
 public:
-	static void clear();	
-	static int show_menu(bool status_air, double temperature);
-	static void exit_program();
-	static void invalid_option();
+	static Controller* get_instance();
+	void clear();	
+	int show_menu(bool status_air);
+	void exit_program();
+	void invalid_option();
+	void* temperature_controller(Connection connection);
 
 private:
-	static void wait_time();
+	Controller();
+
+	void wait_time();
+
+	double temperature;
 };

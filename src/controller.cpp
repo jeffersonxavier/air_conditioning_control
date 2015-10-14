@@ -1,3 +1,4 @@
+#include "connection.h"
 #include "controller.h"
 #include <iomanip>
 #include <iostream>
@@ -12,6 +13,22 @@ using std::fixed;
 using std::setprecision;
 
 #define WAIT 2
+
+static Controller* controller = nullptr;
+
+Controller::Controller()
+	: temperature(0)
+{
+}
+
+Controller*
+Controller::get_instance()
+{
+	if (controller == nullptr)
+		controller = new Controller();
+
+	return controller;
+}
 
 void
 Controller::clear()
@@ -28,7 +45,7 @@ Controller::clear()
 }
 
 int
-Controller::show_menu(bool status_air, double temperature)
+Controller::show_menu(bool status_air)
 {
 	clear();
 
@@ -74,4 +91,13 @@ Controller::wait_time()
 		cout << i << "..." << endl;
 		sleep(1);
 	}
+}
+
+void*
+Controller::temperature_controller(Connection connection)
+{
+	connection.client_connection();
+	temperature = connection.get_temperature();
+
+	return nullptr;
 }

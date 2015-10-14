@@ -70,7 +70,7 @@ Connection::server_connection()
 		errx(ERROR_LISTEN, "Fail in listen function!");
 }
 
-void
+double
 Connection::get_temperature()
 {
 	string message = "get_temperature";
@@ -81,6 +81,12 @@ Connection::get_temperature()
 
 	if (send(socket_descriptor, "get_temperature", size, 0) < 0)
 		errx(ERROR_SEND, "Fail in send function!");
+
+	double temperature;
+	if (recv(socket_descriptor, &temperature, sizeof(temperature), 0) < -1) 
+		errx(ERROR_RECV, "Fail in recv function!");
+
+	return temperature;
 }
 
 void
@@ -99,10 +105,10 @@ Connection::accept_connections()
 			continue;
 		}
 
-		// pid_t pid = fork();
+		pid_t pid = fork();
 
-		// if (pid == 0)
-		// 	receive_messages(client_id);
+		if (pid == 0)
+			receive_messages(client_id);
 	}
 }
 
