@@ -70,7 +70,7 @@ Connection::server_connection()
 		errx(ERROR_LISTEN, "Fail in listen function!");
 }
 
-double
+float
 Connection::get_temperature()
 {
 	string message = "get_temperature";
@@ -82,7 +82,7 @@ Connection::get_temperature()
 	if (send(socket_descriptor, "get_temperature", size, 0) < 0)
 		errx(ERROR_SEND, "Fail in send function!");
 
-	double temperature;
+	float temperature;
 	if (recv(socket_descriptor, &temperature, sizeof(temperature), 0) < -1) 
 		errx(ERROR_RECV, "Fail in recv function!");
 

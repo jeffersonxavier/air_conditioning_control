@@ -10,8 +10,6 @@ int main(int argc, char const *argv[])
 	if (argc < 2)
 		errx(ERROR_PARAMS, "Invalid number of params");
 
-	bool status_air = false;
-
 	string server_ip = argv[1];
 
 	Connection connection_temperature(server_ip, TEMPERATURE_PORT);
@@ -21,7 +19,7 @@ int main(int argc, char const *argv[])
 
 	bool execute = true;
 	while(execute) {
-		int option = controller->show_menu(status_air);
+		int option = controller->show_menu();
 		
 		switch(option)
 		{

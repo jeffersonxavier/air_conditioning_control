@@ -6,20 +6,19 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <stdio.h>
 
 using std::cin;
 using std::cout;
 using std::endl;
-using std::fixed;
-using std::setprecision;
 
 #define WAIT 2
+
+pthread_t temperature_thread;
 
 static Controller* controller = nullptr;
 
 Controller::Controller()
-	: temperature(0)
+	:temperature(0), status_air(false)
 {
 }
 
@@ -30,6 +29,27 @@ Controller::get_instance()
 		controller = new Controller();
 
 	return controller;
+}
+
+float
+Controller::get_temperature()
+{
+	return temperature;
+}
+
+void
+Controller::set_temperature(float temp)
+{
+	temperature = temp;
+	print_temperature();
+}
+
+void
+Controller::print_temperature()
+{
+	printf("\033[%d;%dfTemperatura do Ambiente: %.2f\n\n", 3, 40, temperature);
+	printf("\033[%d;%df", 8, 8);
+	fflush(stdout);
 }
 
 void
@@ -47,18 +67,17 @@ Controller::clear()
 }
 
 int
-Controller::show_menu(bool status_air)
+Controller::show_menu()
 {
 	clear();
 
-	cout << "\t\tSistema de Controle de Ar condicionado" << endl << endl;
-	cout << "Ar Condicionado: " << (status_air ? "Ligado" : "Desligado");
-	cout << "\t\t";
-	cout << "Temperatura do Ambiente: " << fixed << setprecision(1) << temperature << endl << endl;
-
-	cout << "1 - Ligar/Desligar Ar Condicionado!" << endl;
-	cout << "2 - Sair" << endl << endl;
-	cout << "-> ";
+	printf("\033[%d;%dfSistema de Controle de Ar Condicionado\n\n", 1, 20);
+	printf("Ar Condicionado: %s", (status_air ? "Ligado" : "Desligado"));
+	printf("\033[%d;%dfTemperatura do Ambiente: %.2f\n\n", 3, 40, temperature);
+	printf("1 - Ligar/Desligar Ar Condicionado!\n");
+	printf("2 - Sair\n\n");
+	printf("Opcao: ");
+	fflush(stdout);
 
 	int option;
 	cin >> option;
@@ -69,6 +88,7 @@ Controller::show_menu(bool status_air)
 void
 Controller::exit_program()
 {
+	pthread_cancel(temperature_thread);
 	clear();
 
 	cout << "Saindo!" << endl;
@@ -98,7 +118,6 @@ Controller::wait_time()
 void
 Controller::temperature_controller(Connection connection)
 {
-	pthread_t temperature_thread;
 	pthread_create(&temperature_thread, nullptr, &update_temperature, &connection);
 }
 
@@ -107,10 +126,18 @@ update_temperature(void* conn)
 {
 	Connection *connection = (Connection*) conn;
 
-	connection->client_connection();
-	double temperature = connection->get_temperature();
-	
-	printf("Esta na funcao teste\n");
-	printf("%f\n", temperature);
+	while (true)
+	{
+		connection->client_connection();
+		float temperature = connection->get_temperature();
+
+		Controller* controller = Controller::get_instance();
+
+		if (controller->get_temperature() != temperature)
+			controller->set_temperature(temperature);
+
+		sleep(2);
+	}
+
 	return nullptr;
 }
