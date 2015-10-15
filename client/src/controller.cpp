@@ -114,7 +114,6 @@ Controller::air_conditioning_control(Connection connection)
 
 	connection.send_message(connection.get_socket_descriptor(), size, action);
 	string result = connection.receive(connection.get_socket_descriptor());
-	
 
 	if (result == "success")
 		status_air = not status_air;
@@ -141,7 +140,7 @@ update_temperature(void* conn)
 		if (controller->get_temperature() != temperature)
 			controller->set_temperature(temperature);
 
-		sleep(5);
+		sleep(60);
 	}
 
 	return nullptr;

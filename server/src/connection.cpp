@@ -9,11 +9,10 @@
 #include <unistd.h>
 
 #define ERROR_SOCKET -2
-#define ERROR_CONNECT -3
-#define ERROR_BIND -4
-#define ERROR_LISTEN -5
-#define ERROR_RECV -6
-#define ERROR_SEND -7
+#define ERROR_BIND -3
+#define ERROR_LISTEN -4
+#define ERROR_RECV -5
+#define ERROR_SEND -6
 #define QUEUE_LISTEN 10
 
 using std::cerr;
@@ -48,16 +47,6 @@ Connection::do_connect(struct sockaddr_in* server_addr)
 }
 
 void
-Connection::client_connection()
-{
-	struct sockaddr_in server_addr;
-	socket_descriptor = do_connect(&server_addr);
-
-    if (connect(socket_descriptor,(struct sockaddr *) &server_addr, sizeof(server_addr)) < 0)
-		errx(ERROR_CONNECT, "Fail in connect function!");
-}
-
-void
 Connection::server_connection()
 {
 	struct sockaddr_in server_addr;
@@ -68,27 +57,6 @@ Connection::server_connection()
 
 	if (listen(socket_descriptor, QUEUE_LISTEN) < 0)
 		errx(ERROR_LISTEN, "Fail in listen function!");
-}
-
-int
-Connection::get_socket_descriptor()
-{
-	return socket_descriptor;
-}
-
-float
-Connection::get_temperature()
-{
-	string message = "get_temperature";
-	int size = message.size() + 1;
-
-	send_message(socket_descriptor, size, message);
-
-	float temperature;
-	if (recv(socket_descriptor, &temperature, sizeof(temperature), 0) < -1) 
-		errx(ERROR_RECV, "Fail in recv function!");
-
-	return temperature;
 }
 
 void
@@ -109,10 +77,7 @@ Connection::accept_connections()
 		else
 		{
 			printf("Client connection %s\n", inet_ntoa(client.sin_addr));
-			pid_t pid = fork();
-
-			if (pid == 0)
-				receive_messages(client_id);
+			receive_messages(client_id);
 		}
 
 		close(client_id);
