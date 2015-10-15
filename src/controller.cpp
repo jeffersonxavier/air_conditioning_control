@@ -107,12 +107,17 @@ Controller::air_conditioning_control(Connection connection)
 	string message = "air_control";
 	int size = message.size() + 1;
 
-	connection.send_message(size, message);
+	connection.send_message(connection.get_socket_descriptor(), size, message);
 
 	string action = not status_air ? "turn_on" : "turn_off";
 	size = action.size() + 1;
 
-	connection.send_message(size, action);
+	connection.send_message(connection.get_socket_descriptor(), size, action);
+	string result = connection.receive(connection.get_socket_descriptor());
+	
+
+	if (result == "success")
+		status_air = not status_air;
 }
 
 void

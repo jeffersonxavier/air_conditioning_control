@@ -19,7 +19,7 @@ public:
 	float get_temperature();
 	
 	int get_socket_descriptor();
-	void send_message(int size, string message);
+	void send_message(int id, int size, string message);
 	string receive(int client_id);
 
 private:

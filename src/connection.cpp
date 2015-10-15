@@ -82,7 +82,7 @@ Connection::get_temperature()
 	string message = "get_temperature";
 	int size = message.size() + 1;
 
-	send_message(size, message);
+	send_message(socket_descriptor, size, message);
 
 	float temperature;
 	if (recv(socket_descriptor, &temperature, sizeof(temperature), 0) < -1) 
@@ -142,31 +142,31 @@ Connection::receive_messages(int client_id)
 
 		string response = "success";
 		int size = response.size() + 1;
-		send_message(size, response);
+		send_message(client_id, size, response);
 	}
 }
 
 void
-Connection::send_message(int size, string message)
+Connection::send_message(int id, int size, string message)
 {
-	if (send(socket_descriptor, &size, sizeof(size), 0) < 0)
+	if (send(id, &size, sizeof(size), 0) < 0)
 		errx(ERROR_SEND, "Fail in send function!");
 
-	if (send(socket_descriptor, message.c_str(), size, 0) < 0)
+	if (send(id, message.c_str(), size, 0) < 0)
 		errx(ERROR_SEND, "Fail in send function!");
 }
 
 string
-Connection::receive(int client_id)
+Connection::receive(int id)
 {
 	int size;
-	if (recv(client_id, &size, sizeof(size), 0) <= 0)
-		errx(ERROR_RECV, "Fail in recv function!");
+	if (recv(id, &size, sizeof(size), 0) <= 0)
+		errx(ERROR_RECV, "Fail in first recv function!");
 
 	char* message = (char*) malloc(size);
 
-	if (recv(client_id, message, size, 0) <= 0)
-		errx(ERROR_RECV, "Fail in recv function!");
+	if (recv(id, message, size, 0) <= 0)
+		errx(ERROR_RECV, "Fail in second recv function!");
 
 	string result = message;
 	free(message);
