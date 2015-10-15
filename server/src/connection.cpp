@@ -1,4 +1,5 @@
 #include "connection.h"
+#include "log.h"
 #include <arpa/inet.h>
 #include <err.h>
 #include <netdb.h>
@@ -15,12 +16,12 @@
 #define ERROR_SEND -6
 #define QUEUE_LISTEN 10
 
-using std::cerr;
-using std::endl;
+Log* logger = nullptr;
 
 Connection::Connection(string server_ip, int server_port)
-	: server_ip(server_ip), server_port(server_port), socket_descriptor(0)
+	: server_ip(server_ip), server_port(server_port), socket_descriptor(0), client_ip("")
 {
+	logger = Log::get_instance();
 }
 
 Connection::~Connection()
@@ -35,7 +36,10 @@ Connection::do_connect(struct sockaddr_in* server_addr)
 	int descriptor = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (descriptor == -1)
+	{
+		logger->write("Fail in socket function!");
 		errx(ERROR_SOCKET, "Fail in socket function!");
+	}
 
 	bzero((char *) server_addr, sizeof(*server_addr));
 
@@ -53,10 +57,18 @@ Connection::server_connection()
 	socket_descriptor = do_connect(&server_addr);
 
 	if (bind(socket_descriptor, (struct sockaddr *) &server_addr, sizeof(struct sockaddr)) < 0)
+	{
+		logger->write("Fail in bind function!");
 		errx(ERROR_BIND, "Fail in bind function!");
+	}
 
 	if (listen(socket_descriptor, QUEUE_LISTEN) < 0)
+	{
+		logger->write("Fail in listen function!");
 		errx(ERROR_LISTEN, "Fail in listen function!");
+	}
+
+	logger->write("Startup Server Complet!");
 }
 
 void
@@ -71,12 +83,14 @@ Connection::accept_connections()
 
 		if (client_id < 0)
 		{
-			cerr << "Fail in accept function!" << endl;
+			logger->write("Fail in accept function!");
 			continue;
 		}
 		else
 		{
-			printf("Client connection %s\n", inet_ntoa(client.sin_addr));
+			client_ip = inet_ntoa(client.sin_addr);
+			logger->write("Client connection with ip: " + client_ip);
+
 			receive_messages(client_id);
 		}
 
@@ -91,19 +105,24 @@ Connection::receive_messages(int client_id)
 
 	if (message == "get_temperature")
 	{
+		logger->write("Request temperature from client " + client_ip);
 		float temperature = 39.5;
 
 		if (send(client_id, &temperature, sizeof(temperature), 0) < 0)
-			cerr << "Fail in send function!" << endl;
+			logger->write("Fail in send temperature!");
 	}
 	else if (message == "air_control")
 	{
 		message = receive(client_id);
 
 		if (message == "turn_on")
-			printf("turn_on received!\n");
+		{
+			logger->write("Request to turn on air from client " + client_ip);
+		}
 		else
-			printf("turn_off received!\n");
+		{
+			logger->write("Request to turn off air from client " + client_ip);
+		}
 
 		string response = "success";
 		int size = response.size() + 1;
@@ -115,10 +134,13 @@ void
 Connection::send_message(int id, int size, string message)
 {
 	if (send(id, &size, sizeof(size), 0) < 0)
-		errx(ERROR_SEND, "Fail in send function!");
+	{
+		logger->write("Fail in send message size ");
+		return;
+	}
 
 	if (send(id, message.c_str(), size, 0) < 0)
-		errx(ERROR_SEND, "Fail in send function!");
+		logger->write("Fail in send message " + message);
 }
 
 string
@@ -126,12 +148,12 @@ Connection::receive(int id)
 {
 	int size;
 	if (recv(id, &size, sizeof(size), 0) <= 0)
-		errx(ERROR_RECV, "Fail in first recv function!");
+		logger->write("Fail in receive message size from client " + client_ip);
 
 	char* message = (char*) malloc(size);
 
 	if (recv(id, message, size, 0) <= 0)
-		errx(ERROR_RECV, "Fail in second recv function!");
+		logger->write("Fail in receive message from client " + client_ip);
 
 	string result = message;
 	free(message);
