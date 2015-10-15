@@ -26,6 +26,8 @@ Connection::Connection(string server_ip, int server_port)
 		temperature(0.0), status_air(false)
 {
 	logger = Log::get_instance();
+
+	control_uart_air(status_air);
 }
 
 Connection::~Connection()
@@ -118,8 +120,10 @@ Connection::receive_messages(int client_id)
 	else if (message == "air_control")
 	{
 		logger->write("Request air_control from client " + client_ip);
-		status_air = not status_air;
-		
+
+		if (control_uart_air(not status_air))
+			status_air = not status_air;
+
 		string status;
 		if (status_air)
 		{
@@ -180,17 +184,69 @@ Connection::get_uart_temperature()
 	unsigned char buffer = 0x05;
 
 	if (write_uart(uart_descriptor, buffer) == -1)
+	{
+		logger->write("Fail in write 0x05 in uart");
 		return 0;
+	}
 
 	char temp[4];
 	if (read_uart(uart_descriptor, (void*) temp, 4) == -1)
+	{
+		logger->write("Fail in read temperature from uart");
 		return 0;
+	}
 
 	float temperature;
 	memcpy(&temperature, &temp, 4);
 	close(uart_descriptor);
 
 	return temperature;
+}
+
+bool
+Connection::control_uart_air(bool action)
+{
+	int uart_descriptor = open_uart();
+
+	if (uart_descriptor == -1)
+		return false;
+
+	unsigned char buffer = 0xA0;
+
+	if (write_uart(uart_descriptor, buffer) == -1)
+	{
+		logger->write("Fail in write 0xA0 in uart");
+		return false;
+	}
+
+	if (action)
+		buffer = 0x01;
+	else
+		buffer = 0x00;
+
+	if (write_uart(uart_descriptor, buffer) == -1)
+	{
+		logger->write("Fail in write turn_on or turn_off in uart");
+		return false;
+	}
+
+	unsigned char result;
+	if (read_uart(uart_descriptor, (void*) &result, sizeof(result)) == -1)
+	{
+		logger->write("Fail in read result air conditioning uart");
+		return false;
+	}
+
+	if (result != 0xA1)
+	{
+		logger->write("Fail in change state air conditioning");
+		return false;
+	}
+
+	close(uart_descriptor);
+
+	logger->write("Success in change state air conditioning");
+	return true;
 }
 
 int
@@ -214,7 +270,6 @@ Connection::write_uart(int uart_descriptor, unsigned char buffer)
 {
 	if (write(uart_descriptor, &buffer, sizeof(buffer)) < 0)
 	{
-		logger->write("Fail in request temperature uart");
 		close(uart_descriptor);
 		return -1;
 	}
@@ -230,7 +285,6 @@ Connection::read_uart(int uart_descriptor, void* buffer, int size)
 
 	if (size_readed <= 0)
 	{
-		logger->write("Fail in read temperature from uart");
 		close(uart_descriptor);
 		return -1;
 	}

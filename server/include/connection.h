@@ -30,6 +30,7 @@ private:
 
 	int do_connect(struct sockaddr_in* server_addr);
 	float get_uart_temperature();
+	bool control_uart_air(bool action);
 
 	int open_uart();
 	int write_uart(int uart_descriptor, unsigned char buffer);
