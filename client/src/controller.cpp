@@ -2,10 +2,10 @@
 #include "controller.h"
 #include <iomanip>
 #include <iostream>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <pthread.h>
 
 using std::cin;
 using std::cout;
@@ -18,7 +18,7 @@ pthread_t temperature_thread;
 static Controller* controller = nullptr;
 
 Controller::Controller()
-	:temperature(0), status_air(false)
+	:temperature(0), status_air("Indefinido")
 {
 }
 
@@ -72,7 +72,7 @@ Controller::show_menu()
 	clear();
 
 	printf("\033[%d;%dfSistema de Controle de Ar Condicionado\n\n", 1, 20);
-	printf("Ar Condicionado: %s", (status_air ? "Ligado" : "Desligado"));
+	printf("Ar Condicionado: %s", status_air.c_str());
 	printf("\033[%d;%dfTemperatura do Ambiente: %.2f\n\n", 3, 40, temperature);
 	printf("1 - Ligar/Desligar Ar Condicionado!\n");
 	printf("2 - Sair\n\n");
@@ -109,14 +109,12 @@ Controller::air_conditioning_control(Connection connection)
 
 	connection.send_message(connection.get_socket_descriptor(), size, message);
 
-	string action = not status_air ? "turn_on" : "turn_off";
-	size = action.size() + 1;
-
-	connection.send_message(connection.get_socket_descriptor(), size, action);
 	string result = connection.receive(connection.get_socket_descriptor());
 
-	if (result == "success")
-		status_air = not status_air;
+	if (result == "turn_on")
+		status_air = "Ligado";
+	else if (result == "turn_off")
+		status_air = "Desligado";
 }
 
 void

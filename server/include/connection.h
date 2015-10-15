@@ -25,6 +25,8 @@ private:
 	int server_port;
 	int socket_descriptor;
 	string client_ip;
+	float temperature;
+	bool status_air;
 
 	int do_connect(struct sockaddr_in* server_addr);
 };

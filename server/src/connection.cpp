@@ -19,7 +19,8 @@
 Log* logger = nullptr;
 
 Connection::Connection(string server_ip, int server_port)
-	: server_ip(server_ip), server_port(server_port), socket_descriptor(0), client_ip("")
+	: server_ip(server_ip), server_port(server_port), socket_descriptor(0), client_ip(""),
+		temperature(0.0), status_air(false)
 {
 	logger = Log::get_instance();
 }
@@ -106,25 +107,29 @@ Connection::receive_messages(int client_id)
 	if (message == "get_temperature")
 	{
 		logger->write("Request temperature from client " + client_ip);
-		float temperature = 39.5;
+		temperature = 39.5;
 
 		if (send(client_id, &temperature, sizeof(temperature), 0) < 0)
 			logger->write("Fail in send temperature!");
 	}
 	else if (message == "air_control")
 	{
-		message = receive(client_id);
-
-		if (message == "turn_on")
+		logger->write("Request air_control from client " + client_ip);
+		status_air = not status_air;
+		
+		string status;
+		if (status_air)
 		{
-			logger->write("Request to turn on air from client " + client_ip);
+			logger->write("Turning on air conditioning");
+			status = "turn_on";
 		}
 		else
 		{
-			logger->write("Request to turn off air from client " + client_ip);
+			logger->write("Turning off air conditioning");
+			status = "turn_off";
 		}
 
-		string response = "success";
+		string response = status;
 		int size = response.size() + 1;
 		send_message(client_id, size, response);
 	}

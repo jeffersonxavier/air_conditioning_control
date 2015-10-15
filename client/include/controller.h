@@ -22,7 +22,7 @@ private:
 	void print_temperature();
 
 	float temperature;
-	bool status_air;
+	string status_air;
 };
 
 extern void* update_temperature(void* conn);
