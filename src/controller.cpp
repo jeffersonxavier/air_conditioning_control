@@ -136,7 +136,7 @@ update_temperature(void* conn)
 		if (controller->get_temperature() != temperature)
 			controller->set_temperature(temperature);
 
-		sleep(2);
+		sleep(5);
 	}
 
 	return nullptr;

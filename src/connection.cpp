@@ -104,26 +104,38 @@ Connection::accept_connections()
 			cerr << "Fail in accept function!" << endl;
 			continue;
 		}
+		else
+		{
+			printf("Client connection %s\n", inet_ntoa(client.sin_addr));
+			pid_t pid = fork();
 
-		pid_t pid = fork();
+			if (pid == 0)
+				receive_messages(client_id);
+		}
 
-		if (pid == 0)
-			receive_messages(client_id);
+		close(client_id);
 	}
 }
 
 void
 Connection::receive_messages(int client_id)
 {
-	int length;
-
-	if (recv(client_id, &length, sizeof(length), 0) <= 0)
+	int size;
+	if (recv(client_id, &size, sizeof(size), 0) <= 0)
 		errx(ERROR_RECV, "Fail in recv function!");
 
-	char* message = (char*) malloc(length);
+	char* message = (char*) malloc(size);
 
-	if (recv(client_id, message, length, 0) <= 0)
+	if (recv(client_id, message, size, 0) <= 0)
 		errx(ERROR_RECV, "Fail in recv function!");
+
+	if (strcmp("get_temperature", message) == 0)
+	{
+		float temperature = 39.5;
+
+		if (send(client_id, &temperature, sizeof(temperature), 0) < 0)
+			cerr << "Fail in send function!" << endl;
+	}
 
 	free(message);
 }
