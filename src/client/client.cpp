@@ -13,6 +13,7 @@ int main(int argc, char const *argv[])
 	string server_ip = argv[1];
 
 	Connection connection_temperature(server_ip, TEMPERATURE_PORT);
+	Connection connection_air(server_ip, AIR_CONDITIONING_PORT);
 
 	Controller* controller = Controller::get_instance();
 	controller->temperature_controller(connection_temperature);
@@ -24,6 +25,7 @@ int main(int argc, char const *argv[])
 		switch(option)
 		{
 			case 1:
+				controller->air_conditioning_control(connection_air);
 				break;
 			case 2:
 				controller->exit_program();

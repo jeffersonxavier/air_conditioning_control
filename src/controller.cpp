@@ -89,30 +89,30 @@ void
 Controller::exit_program()
 {
 	pthread_cancel(temperature_thread);
-	clear();
-
-	cout << "Saindo!" << endl;
-	wait_time();
+	cout << endl << "Saindo!" << endl;
 }
 
 void
 Controller::invalid_option()
 {
-	clear();
-
-	cout << "Opcao Invalida!" << endl;
-	cout << "Espere!" << endl;
-	wait_time();
+	cout << endl << "Opcao Invalida!" << endl;
+	sleep(WAIT);
 }
 
 void
-Controller::wait_time()
+Controller::air_conditioning_control(Connection connection)
 {
-	for (int i = WAIT; i >= 1; --i)
-	{
-		cout << i << "..." << endl;
-		sleep(1);
-	}
+	connection.client_connection();
+
+	string message = "air_control";
+	int size = message.size() + 1;
+
+	connection.send_message(size, message);
+
+	string action = not status_air ? "turn_on" : "turn_off";
+	size = action.size() + 1;
+
+	connection.send_message(size, action);
 }
 
 void

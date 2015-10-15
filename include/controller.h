@@ -14,11 +14,11 @@ public:
 
 	float get_temperature();
 	void set_temperature(float temp);
+	void air_conditioning_control(Connection connection);
 
 private:
 	Controller();
 
-	void wait_time();
 	void print_temperature();
 
 	float temperature;

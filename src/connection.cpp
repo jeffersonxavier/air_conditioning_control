@@ -70,17 +70,19 @@ Connection::server_connection()
 		errx(ERROR_LISTEN, "Fail in listen function!");
 }
 
+int
+Connection::get_socket_descriptor()
+{
+	return socket_descriptor;
+}
+
 float
 Connection::get_temperature()
 {
 	string message = "get_temperature";
 	int size = message.size() + 1;
 
-	if (send(socket_descriptor, &size, sizeof(size), 0) < 0)
-		errx(ERROR_SEND, "Fail in send function!");
-
-	if (send(socket_descriptor, "get_temperature", size, 0) < 0)
-		errx(ERROR_SEND, "Fail in send function!");
+	send_message(size, message);
 
 	float temperature;
 	if (recv(socket_descriptor, &temperature, sizeof(temperature), 0) < -1) 
@@ -120,6 +122,43 @@ Connection::accept_connections()
 void
 Connection::receive_messages(int client_id)
 {
+	string message = receive(client_id);
+
+	if (message == "get_temperature")
+	{
+		float temperature = 39.5;
+
+		if (send(client_id, &temperature, sizeof(temperature), 0) < 0)
+			cerr << "Fail in send function!" << endl;
+	}
+	else if (message == "air_control")
+	{
+		message = receive(client_id);
+
+		if (message == "turn_on")
+			printf("turn_on received!\n");
+		else
+			printf("turn_off received!\n");
+
+		string response = "success";
+		int size = response.size() + 1;
+		send_message(size, response);
+	}
+}
+
+void
+Connection::send_message(int size, string message)
+{
+	if (send(socket_descriptor, &size, sizeof(size), 0) < 0)
+		errx(ERROR_SEND, "Fail in send function!");
+
+	if (send(socket_descriptor, message.c_str(), size, 0) < 0)
+		errx(ERROR_SEND, "Fail in send function!");
+}
+
+string
+Connection::receive(int client_id)
+{
 	int size;
 	if (recv(client_id, &size, sizeof(size), 0) <= 0)
 		errx(ERROR_RECV, "Fail in recv function!");
@@ -129,13 +168,8 @@ Connection::receive_messages(int client_id)
 	if (recv(client_id, message, size, 0) <= 0)
 		errx(ERROR_RECV, "Fail in recv function!");
 
-	if (strcmp("get_temperature", message) == 0)
-	{
-		float temperature = 39.5;
-
-		if (send(client_id, &temperature, sizeof(temperature), 0) < 0)
-			cerr << "Fail in send function!" << endl;
-	}
-
+	string result = message;
 	free(message);
+
+	return result;
 }
