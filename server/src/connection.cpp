@@ -1,12 +1,15 @@
 #include "connection.h"
 #include "log.h"
 #include <arpa/inet.h>
+#include <cstdlib>
 #include <err.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <termios.h>
 #include <unistd.h>
 
 #define ERROR_SOCKET -2
@@ -107,7 +110,7 @@ Connection::receive_messages(int client_id)
 	if (message == "get_temperature")
 	{
 		logger->write("Request temperature from client " + client_ip);
-		temperature = 39.5;
+		temperature = get_uart_temperature();
 
 		if (send(client_id, &temperature, sizeof(temperature), 0) < 0)
 			logger->write("Fail in send temperature!");
@@ -164,4 +167,73 @@ Connection::receive(int id)
 	free(message);
 
 	return result;
+}
+
+float
+Connection::get_uart_temperature()
+{
+	int uart_descriptor = open_uart();
+
+	if (uart_descriptor == -1)
+		return 0;
+
+	unsigned char buffer = 0x05;
+
+	if (write_uart(uart_descriptor, buffer) == -1)
+		return 0;
+
+	char temp[4];
+	if (read_uart(uart_descriptor, (void*) temp, 4) == -1)
+		return 0;
+
+	float temperature;
+	memcpy(&temperature, &temp, 4);
+	close(uart_descriptor);
+
+	return temperature;
+}
+
+int
+Connection::open_uart()
+{
+	int uart_descriptor = open("/dev/ttyAMA0", O_RDWR | O_NOCTTY | O_NDELAY);
+
+	if (uart_descriptor < 0)
+	{
+		logger->write("Fail in open ttyAMA0");
+		return -1;
+	}
+
+	fcntl(uart_descriptor, F_SETFL, 0);
+
+	return uart_descriptor;
+}
+
+int
+Connection::write_uart(int uart_descriptor, unsigned char buffer)
+{
+	if (write(uart_descriptor, &buffer, sizeof(buffer)) < 0)
+	{
+		logger->write("Fail in request temperature uart");
+		close(uart_descriptor);
+		return -1;
+	}
+
+	return 0;
+}
+
+
+int
+Connection::read_uart(int uart_descriptor, void* buffer, int size)
+{
+	int size_readed = read(uart_descriptor, buffer, size);
+
+	if (size_readed <= 0)
+	{
+		logger->write("Fail in read temperature from uart");
+		close(uart_descriptor);
+		return -1;
+	}
+
+	return 0;
 }

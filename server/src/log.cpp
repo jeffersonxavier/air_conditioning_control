@@ -11,8 +11,8 @@ static Log* log = nullptr;
 FILE* log_file = nullptr;
 
 Log::Log()
-	: folder_log("/var/log/air_conditioning_server/"),
-	file_name("/var/log/air_conditioning_server/log.out")
+	: folder_log("air_conditioning_log/"),
+	file_name("air_conditioning_log/log.out")
 {
 	mkdir(folder_log.c_str(), 0777);
 }

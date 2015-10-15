@@ -29,4 +29,9 @@ private:
 	bool status_air;
 
 	int do_connect(struct sockaddr_in* server_addr);
+	float get_uart_temperature();
+
+	int open_uart();
+	int write_uart(int uart_descriptor, unsigned char buffer);
+	int read_uart(int uart_descriptor, void* buffer, int size);
 };

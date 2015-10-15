@@ -12,5 +12,5 @@ all:
 
 clean:
 	@echo Cleaning...
-	@rm -rf obj/ bin/* *~
+	@rm -rf server *~
 	@echo Done!
