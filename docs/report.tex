@@ -1,0 +1,113 @@
+\documentclass[journal,transmag]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\begin{document}
+
+\title{Sistema de Controle de ar-condicionado\\ Sistemas Embarcados}
+
+\author{\IEEEauthorblockN{Jefferson Nunes de Sousa Xavier}}
+
+\markboth{Sistemas Embarcados,~Vol.~1, No.~1, Outubro~2015}{}
+
+\maketitle
+
+\section{Objetivos}
+
+\textbf{Objetivo Geral:} Criar um sistema cliente/servidor capaz de ligar e deligar um ar-condicionado.
+\\
+
+\textbf{Objetivos Específicos:}
+\begin{itemize}
+	\item Criar servidor para se comunicar serialmente via uart com o arduino que irá controlar o ar-condicionado;
+	\item Criar cliente para se comunicar via tcp com o servidor e mandar comandos de ligar e/ou desligar o ar-condicionado e buscar automaticamente a temperatura ambiente em um intervalo de tempo definido;
+	\item Ler temperatura ambiente mandada pelo arduino no servidor e enviar ao cliente conectado;
+	\item Enviar comandos do servidor ao arduido para ligar e desligar o ar-condicionado;
+\end{itemize}
+
+\section{Introdução}
+Para este trabalho foram desenvolvidos dois sistemas. Um que estará funcionando como cliente e outro como servidor. Estes dois sistemas necessitam estar conectados e tramitirem e receberem mensagens entre si, para isso foi estabelecida uma conexão tcp via sockets.
+
+O cliente deve, além de controlar o ar-condicionado, buscar automaticamente a temperatura ambiente que estará sendo lida pelo servidor, para isso foi criada uma thread para que este possa realizar estas tarefas paralelamente. 
+
+O servidor deverá estar escutando do cliente tanto as requisições de temperatura quanto as de controle de ar-condicionado, para isso existe um fork que faz com que este trabalhe como dois sistemas independentes. Também é necessário a existencia de logs que escreverão todas as ações importantes realizadas pelo servidor, foi usado o sistema de arquivos padrão da linguagem C para isso, buscando o melhor desempenho. Por fim, o servidor deve acessar serialmente via uart o arduino que é responsável por de fato controlar o ar-condicionado e ler a temperatura ambiente, toda a leitura e escrita na uart é feita seguindo o padrão POSIX.
+
+\section{Especificação}
+\textbf{Cliente:}
+
+\begin{itemize}
+	\item \textbf{Realizar conexão:} Se conecar ao servidor para receber dados de temperatura e controlar o ar-condicionado.
+	\item \textbf{Menu de opções:} Uma opção para ligar ou desligar o ar-condicionado, dependendo da estado como este se encontra o mesmo, o primeiro estado é indefinido e depois alterna-se entre ligado e desligado.
+	\item \textbf{Controle de Temperatura:} Leitura de temperatura recebida do servidor a cada 60 segundos, e atualização do seu valor na tela caso haja alteração de acordo com a última leitura realizada.
+	\item \textbf{Controle de ar-condicionado:} Envio de sinais para ligar ou desligar o ar-condicionado de acordo com o estado, se estivar ligado é mandado o sinal para desligar se estiver desligado é mandado o sinal para ligar.
+\end{itemize}
+
+\textbf{Servidor:}
+
+\begin{itemize}
+	\item \textbf{Aceitar conexões:} Aceitar conexões dos clientes para mandar temperatura e receber dados para ligar e desligar o ar-condicionado.
+	\item \textbf{Ler temperatura:} Ler temperatura do arduino via uart para mandar para o cliente.
+	\item \textbf{Ligar e Desligar ar:} Enviar sinais para ligar ou desligar o ar-condicionado no arduino via uart.
+	\item \textbf{Log:} Salvar mensagens de log em um arquivo com todas as ações importantes realizadas pelo servidor.
+\end{itemize}
+
+\section{Implementação e Prototipação}
+Os sistemas apresentados foram desenvolvidos em C++ e serão detalhados a seguir conforme a sua implementação.
+
+\textbf{Cliente:}
+Este sistema é formado por três arquivos, sendo as classes \textit{``Connection''} e \textit{``Controller''} e a função principal que dá início ao sistema.
+
+\begin{itemize}
+	\item \textbf{Função principal:}
+		A função principal é responsável por inializar as conexões para temperatura e ar condicionado e o controle da aplicação, logo após, um laço é criado que ficará aberto enquanto o sistema estiver em funcionamento. A partir disso, as outras classes ficam responsáveis por fornecer as funcionalidades que manterão o sistema em funcionamento.
+	\item \textbf{Controller:}
+		Essa classe contém todas as funções de controle do cliente, são as funções que são chamadas para cada opção do menu e para a atualização da temperatura.
+
+		A função de apresentação do menu mostra os dados de estado do ar condicionado, valor da temperatura e as opções do sistema. Para impressão do valor da temperatura usa-se um recurso da função \textit{``printf''} onde se é definido o local da tela onde será impressa a mensagem, dessa forma, como a temperatura é atualizada em uma thread a parte pode-se realizar a impressão da mesma sem alterações visuais no processo principal. Sempre que esta função é chamada uma função para limpar a tela é invocada para manter a impressão correta na tela, nessa fução de limpeza de tela um processo filho é criado para chamar a a função execvp e realizar a funcionalidade desejada.
+
+		A classe Controller também possui as funções para fechar o programa e tratar opções inválidas, que apenas mostram uma mensagem na tela.
+
+		As principais funções são a de controle de temperatura e do ar condicionado. A primeira é responsável por inicializar uma thread que estará fazendo a atualização da temperatura, ou seja, faz conexão com o servidor e chama o método para pegar a temperatura do mesmo, a temperatura retornada é verificada com a temperatura atual, se forem diferentes a temperatura atual é atualizada e apresentada ao usuário. Essa thread permanece em execução durante toda a vida do sistema e a cada minuto realiza novamente a chamada de temperatura. A função de controle do ar condicionado chama a função de conexão com o servidor envia uma mensagem para controle do ar e recebe a resposta para saber se o mesmo foi ligado ou desligado para alterar o estado e mostrar ao usuário.
+	\item \textbf{Connection:}
+		Essa classe contém todas as funções responsáveis pela conexão e comunicação com o servidor.
+
+		Existe a função de conexão que abre uma conexão com o servidor e, a partir disso, é possível mandar e receber mensagens.
+
+		Existem as funções de envio e recebimento de mensagens, a primeira recebe uma mensagem como parâmentro e envia ao servidor o tamanho desta mensagem e a própria mensagem. A segunda recebe o tamanho de uma mensagem e a mensagem mandada pelo servidor e retorna essa mensagem.
+
+		Por fim, a função que pega a temperatura envia ao servidor a pensagem para temperatura e recebe a temperatura para que o controle possa atualizar o valor da mesma para visualização do usuário.
+\end{itemize}
+
+\textbf{Servidor:}
+Este sistema é formado também por três arquivos, sendo as classes \textit{``Connection''} e \textit{``Log''} e a função principal.
+
+\begin{itemize}
+	\item \textbf{Função principal:}
+		A função principal apenas cria um fork e prepara os dois processos agora existentes para a comunicação com os clientes. Uma conexão é aberta e é dado um \textit{``accept''} em cada processo. Um processo é responsável por receber requisições de temperatura e o outro controle do ar condicionado.
+	\item \textbf{Connection:}
+		Essa classe contém as funções responsáveis pela comunicação com o cliente e com o arduino.
+
+		Existe a função de conexão que habilita o servidor para aceitar conexões, e também existe a função para aceitar as conexões dos clientes, nessa é estabelecida de fato uma comunição e é chamada a função para recebimento de mensagens. As funções de aceitação de conexões e recebimento de mensagens estão dentro de um while para que o servidor fique sempre escutando novas conexões.
+
+		Assim como no cliente existem as funções para envio e recebimento de mensagens que são chamadas dentro da função para receber mensagens dos clientes. Essa função tem o tratamento para quando a mensagem de temperatura é recebida, nesse caso deve ser chamada a função que pega a temperatura do arduino depois é mandada a mensagem com o valor da temperatura retornado ao cliente. Existe também o tratamento para quando a mensagem de controle do ar condicionado é recebida, nesse caso uma mensagem é enviada ao arduino com o estado contrário do atual estado do ar condicionado, ou seja, se este estava ligado é mandado que seja desligado, se estava desligado é mandado que seja ligado, ao fim é enviado ao cliente uma mensagem com qual foi a ação executada para que este possa atualizar a mensagem do estado do ar para a visualização do cliente.
+
+		A função que pega a temperatura do arduino, envia o byte 0x05 na uart e recebe 4 bytes com o valor dessa temperatura que são copiados para um float que é retornado com o valor.
+
+		A fução de controle do ar condicionado envia o byte 0xA0 e o byte 0x01 para ligar o ar ou 0xA0 e 0x00 para desligar o ar, após isso lê na uart o retorno do arduino se for retornado o byte 0xA1 significa que o comando foi executado com sucesso, caso contrário, significa que o comando não foi executado.
+	\item \textbf{Log:}
+		Essa classe é responsável apenas por abrir um arquivo e escrever as mensagens das principais ações do servidor.
+
+		A função write recebe uma mensagem como parâmetro abre o arquivo e escreve essa mensagem no arquivo junto com a hora e data do momento.
+\end{itemize}
+
+\section{Conclusão}
+Neste documento foram apresentados dados do problema proposto e da solução desenvolvida. Pôde-se usar na prática diversos conceitos estudados até o momento na disciplina de sistemas embarcados. Tudo foi testado em tempo de aula e pode-se comprovar o funcionamento esperado.
+
+Todo o código dos sistemas desenvolvidos pode ser encontrado em: \url{https://github.com/jeffersonxavier/air_conditioning_control}.
+
+\end{document}
+
+

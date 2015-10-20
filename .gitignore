@@ -31,3 +31,21 @@
 /client/client
 /server/server
 /server/air_conditioning_log/
+
+#Latex
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.bak
+
+## Intermediate documents:
+*.dvi
+*-converted-to.*
+# these rules might exclude image files for figures etc.
+*.ps
+*.pdf
