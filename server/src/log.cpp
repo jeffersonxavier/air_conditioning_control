@@ -10,6 +10,7 @@
 static Log* log = nullptr;
 FILE* log_file = nullptr;
 
+//Init folder to log file and log file name
 Log::Log()
 	: folder_log("air_conditioning_log/"),
 	file_name("air_conditioning_log/log.out")
@@ -17,6 +18,7 @@ Log::Log()
 	mkdir(folder_log.c_str(), 0777);
 }
 
+//Singleton to instanciate log
 Log*
 Log::get_instance()
 {
@@ -26,6 +28,7 @@ Log::get_instance()
 	return log;
 }
 
+//write date and a message in log file
 void
 Log::write(string message)
 {
@@ -42,6 +45,7 @@ Log::write(string message)
 	fclose(log_file);
 }
 
+//Open file to append
 void
 Log::open()
 {

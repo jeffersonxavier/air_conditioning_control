@@ -16,17 +16,20 @@
 using std::cerr;
 using std::endl;
 
+//Init server ip, server port and socket descriptor
 Connection::Connection(string server_ip, int server_port)
 	: server_ip(server_ip), server_port(server_port), socket_descriptor(0)
 {
 }
 
+//Close socket
 Connection::~Connection()
 {
 	if (socket_descriptor)
 		close(socket_descriptor);
 }
 
+//Open socket with tcp
 int
 Connection::do_connect(struct sockaddr_in* server_addr)
 {
@@ -44,6 +47,7 @@ Connection::do_connect(struct sockaddr_in* server_addr)
     return descriptor;
 }
 
+//Connect to server
 void
 Connection::client_connection()
 {
@@ -54,12 +58,14 @@ Connection::client_connection()
 		errx(ERROR_CONNECT, "Fail in connect function!");
 }
 
+//Return socket descriptor
 int
 Connection::get_socket_descriptor()
 {
 	return socket_descriptor;
 }
 
+//Get temperature from server and return
 float
 Connection::get_temperature()
 {
@@ -75,6 +81,7 @@ Connection::get_temperature()
 	return temperature;
 }
 
+//Send server message
 void
 Connection::send_message(int id, int size, string message)
 {
@@ -85,6 +92,7 @@ Connection::send_message(int id, int size, string message)
 		errx(ERROR_SEND, "Fail in send function!");
 }
 
+//Receive server message and return this message
 string
 Connection::receive(int id)
 {

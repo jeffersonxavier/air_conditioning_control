@@ -21,6 +21,7 @@
 
 Log* logger = nullptr;
 
+//Init server ip, server port, socket descriptor, client ip, temperature and status air
 Connection::Connection(string server_ip, int server_port)
 	: server_ip(server_ip), server_port(server_port), socket_descriptor(0), client_ip(""),
 		temperature(0.0), status_air(false)
@@ -30,12 +31,14 @@ Connection::Connection(string server_ip, int server_port)
 	control_uart_air(status_air);
 }
 
+//Close socket
 Connection::~Connection()
 {
 	if (socket_descriptor)
 		close(socket_descriptor);
 }
 
+//Open socket with tcp
 int
 Connection::do_connect(struct sockaddr_in* server_addr)
 {
@@ -56,6 +59,7 @@ Connection::do_connect(struct sockaddr_in* server_addr)
     return descriptor;
 }
 
+//Hability connection to clients
 void
 Connection::server_connection()
 {
@@ -77,6 +81,7 @@ Connection::server_connection()
 	logger->write("Startup Server Complet!");
 }
 
+//Accept connections to clients
 void
 Connection::accept_connections()
 {
@@ -104,6 +109,7 @@ Connection::accept_connections()
 	}
 }
 
+//Receive messages to temperature and air conditioning control
 void
 Connection::receive_messages(int client_id)
 {
@@ -142,6 +148,7 @@ Connection::receive_messages(int client_id)
 	}
 }
 
+//Send client message
 void
 Connection::send_message(int id, int size, string message)
 {
@@ -155,6 +162,7 @@ Connection::send_message(int id, int size, string message)
 		logger->write("Fail in send message " + message);
 }
 
+//Receive client message and return this message
 string
 Connection::receive(int id)
 {
@@ -173,6 +181,7 @@ Connection::receive(int id)
 	return result;
 }
 
+//Get temperature from uart
 float
 Connection::get_uart_temperature()
 {
@@ -203,6 +212,7 @@ Connection::get_uart_temperature()
 	return temperature;
 }
 
+//Send turn_on or turn_off air conditioning to uart
 bool
 Connection::control_uart_air(bool action)
 {
@@ -249,6 +259,7 @@ Connection::control_uart_air(bool action)
 	return true;
 }
 
+//Open uart to comunication
 int
 Connection::open_uart()
 {
@@ -265,6 +276,7 @@ Connection::open_uart()
 	return uart_descriptor;
 }
 
+//Write a buffer in uart
 int
 Connection::write_uart(int uart_descriptor, unsigned char buffer)
 {
@@ -277,7 +289,7 @@ Connection::write_uart(int uart_descriptor, unsigned char buffer)
 	return 0;
 }
 
-
+//Read a byte from uart
 int
 Connection::read_uart(int uart_descriptor, void* buffer, int size)
 {

@@ -17,11 +17,13 @@ pthread_t temperature_thread;
 
 static Controller* controller = nullptr;
 
+//Init temperature with 0 and status air with undefined
 Controller::Controller()
 	:temperature(0), status_air("Indefinido")
 {
 }
 
+//Singleton to instanciate a Controller
 Controller*
 Controller::get_instance()
 {
@@ -31,12 +33,14 @@ Controller::get_instance()
 	return controller;
 }
 
+//Return actual temperature
 float
 Controller::get_temperature()
 {
 	return temperature;
 }
 
+//Set new temperature and call print in screen
 void
 Controller::set_temperature(float temp)
 {
@@ -44,6 +48,7 @@ Controller::set_temperature(float temp)
 	print_temperature();
 }
 
+//Print temperature in position x=3 and y=40, and move cursor to x=8 and y=8
 void
 Controller::print_temperature()
 {
@@ -52,6 +57,7 @@ Controller::print_temperature()
 	fflush(stdout);
 }
 
+//Clear screen
 void
 Controller::clear()
 {
@@ -66,6 +72,7 @@ Controller::clear()
 		waitpid(pid, nullptr, 0);
 }
 
+//Show options in screen
 int
 Controller::show_menu()
 {
@@ -85,6 +92,7 @@ Controller::show_menu()
 	return option;
 }
 
+//Cancel temperature thread and show message
 void
 Controller::exit_program()
 {
@@ -92,6 +100,7 @@ Controller::exit_program()
 	cout << endl << "Saindo!" << endl;
 }
 
+//Show invalid option and wait a time
 void
 Controller::invalid_option()
 {
@@ -99,6 +108,7 @@ Controller::invalid_option()
 	sleep(WAIT);
 }
 
+//Send air_controll message to server and receive result
 void
 Controller::air_conditioning_control(Connection connection)
 {
@@ -117,12 +127,14 @@ Controller::air_conditioning_control(Connection connection)
 		status_air = "Desligado";
 }
 
+//Create thread to update temperature
 void
 Controller::temperature_controller(Connection connection)
 {
 	pthread_create(&temperature_thread, nullptr, &update_temperature, &connection);
 }
 
+//get temperature from server and update
 void*
 update_temperature(void* conn)
 {
