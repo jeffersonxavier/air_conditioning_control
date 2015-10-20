@@ -14,6 +14,7 @@ public:
 
 	float get_temperature();
 	void set_temperature(float temp);
+	void update_relative_humidity(Connection connection);
 	void air_conditioning_control(Connection connection);
 
 private:
@@ -22,6 +23,7 @@ private:
 	void print_temperature();
 
 	float temperature;
+	float relative_humidity;
 	string status_air;
 };
 

@@ -81,6 +81,23 @@ Connection::get_temperature()
 	return temperature;
 }
 
+float
+Connection::get_relative_humidity()
+{
+	client_connection();
+
+	string message = "get_humidity";
+	int size = message.size() + 1;
+
+	send_message(socket_descriptor, size, message);
+
+	float humidity;
+	if (recv(socket_descriptor, &humidity, sizeof(humidity), 0) < -1) 
+		errx(ERROR_RECV, "Fail in recv function!");
+
+	return humidity;
+}
+
 //Send server message
 void
 Connection::send_message(int id, int size, string message)

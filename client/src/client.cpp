@@ -12,11 +12,11 @@ int main(int argc, char const *argv[])
 
 	string server_ip = argv[1];
 
-	Connection connection_temperature(server_ip, TEMPERATURE_PORT);
+	Connection connection_environment(server_ip, TEMPERATURE_PORT);
 	Connection connection_air(server_ip, AIR_CONDITIONING_PORT);
 
 	Controller* controller = Controller::get_instance();
-	controller->temperature_controller(connection_temperature);
+	controller->temperature_controller(connection_environment);
 
 	bool execute = true;
 	while(execute) {
@@ -28,6 +28,9 @@ int main(int argc, char const *argv[])
 				controller->air_conditioning_control(connection_air);
 				break;
 			case 2:
+				controller->update_relative_humidity(connection_environment);
+				break;
+			case 3:
 				controller->exit_program();
 				execute = false;
 				break;

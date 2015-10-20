@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#define TEMPERATURE_PORT 8080
-#define AIR_CONDITIONING_PORT 3000
+#define TEMPERATURE_PORT 3007
+#define AIR_CONDITIONING_PORT 8007
 
 using std::string;
 
@@ -15,6 +15,7 @@ public:
 
 	void client_connection();
 	float get_temperature();
+	float get_relative_humidity();
 	
 	int get_socket_descriptor();
 	void send_message(int id, int size, string message);

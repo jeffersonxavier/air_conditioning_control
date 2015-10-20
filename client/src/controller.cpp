@@ -19,7 +19,7 @@ static Controller* controller = nullptr;
 
 //Init temperature with 0 and status air with undefined
 Controller::Controller()
-	:temperature(0), status_air("Indefinido")
+	:temperature(0), relative_humidity(0), status_air("Indefinido")
 {
 }
 
@@ -53,7 +53,7 @@ void
 Controller::print_temperature()
 {
 	printf("\033[%d;%dfTemperatura do Ambiente: %.2f\n\n", 3, 40, temperature);
-	printf("\033[%d;%df", 8, 8);
+	printf("\033[%d;%df", 9, 8);
 	fflush(stdout);
 }
 
@@ -80,9 +80,11 @@ Controller::show_menu()
 
 	printf("\033[%d;%dfSistema de Controle de Ar Condicionado\n\n", 1, 20);
 	printf("Ar Condicionado: %s", status_air.c_str());
-	printf("\033[%d;%dfTemperatura do Ambiente: %.2f\n\n", 3, 40, temperature);
+	printf("\033[%d;%dfTemperatura do Ambiente: %.2f\t\t", 3, 40, temperature);
+	printf("Umidade Relativa %.2f\n\n", relative_humidity);
 	printf("1 - Ligar/Desligar Ar Condicionado!\n");
-	printf("2 - Sair\n\n");
+	printf("2 - Ver umidade relativa do ar\n");
+	printf("3 - Sair\n\n");
 	printf("Opcao: ");
 	fflush(stdout);
 
@@ -125,6 +127,12 @@ Controller::air_conditioning_control(Connection connection)
 		status_air = "Ligado";
 	else if (result == "turn_off")
 		status_air = "Desligado";
+}
+
+void
+Controller::update_relative_humidity(Connection connection)
+{
+	relative_humidity = connection.get_relative_humidity();
 }
 
 //Create thread to update temperature

@@ -146,6 +146,14 @@ Connection::receive_messages(int client_id)
 		int size = response.size() + 1;
 		send_message(client_id, size, response);
 	}
+	else if (message == "get_humidity")
+	{
+		logger->write("Request uart from client " + client_ip);
+		float humidity = get_uart_relative_humidity();
+
+		if (send(client_id, &humidity, sizeof(humidity), 0) < 0)
+			logger->write("Fail in send humidity!");
+	}
 }
 
 //Send client message
@@ -190,9 +198,10 @@ Connection::get_uart_temperature()
 	if (uart_descriptor == -1)
 		return 0;
 
-	unsigned char buffer = 0x05;
+	unsigned char buffer[1];
+	buffer[0] = 0x05;
 
-	if (write_uart(uart_descriptor, buffer) == -1)
+	if (write_uart(uart_descriptor, buffer, 1) == -1)
 	{
 		logger->write("Fail in write 0x05 in uart");
 		return 0;
@@ -212,6 +221,33 @@ Connection::get_uart_temperature()
 	return temperature;
 }
 
+float
+Connection::get_uart_relative_humidity()
+{
+	int uart_descriptor = open_uart();
+
+	if (uart_descriptor == -1)
+		return 0;
+
+	unsigned char buffer[5];
+	buffer[0] = 0x06;
+	buffer[1] = 3;
+	buffer[2] = 2;
+	buffer[3] = 9;
+	buffer[4] = 8;
+
+	if (write_uart(uart_descriptor, buffer, 5) == -1)
+		return 0;
+
+	float humidity;
+	if (read_uart(uart_descriptor, (void*) &humidity, 4) == -1)
+		return 0;
+
+	close(uart_descriptor);
+
+	return humidity;
+}
+
 //Send turn_on or turn_off air conditioning to uart
 bool
 Connection::control_uart_air(bool action)
@@ -221,20 +257,21 @@ Connection::control_uart_air(bool action)
 	if (uart_descriptor == -1)
 		return false;
 
-	unsigned char buffer = 0xA0;
+	unsigned char buffer[1];
+	buffer[0] = 0xA0;
 
-	if (write_uart(uart_descriptor, buffer) == -1)
+	if (write_uart(uart_descriptor, buffer, 1) == -1)
 	{
 		logger->write("Fail in write 0xA0 in uart");
 		return false;
 	}
 
 	if (action)
-		buffer = 0x01;
+		buffer[0] = 0x01;
 	else
-		buffer = 0x00;
+		buffer[0] = 0x00;
 
-	if (write_uart(uart_descriptor, buffer) == -1)
+	if (write_uart(uart_descriptor, buffer, 1) == -1)
 	{
 		logger->write("Fail in write turn_on or turn_off in uart");
 		return false;
@@ -278,9 +315,9 @@ Connection::open_uart()
 
 //Write a buffer in uart
 int
-Connection::write_uart(int uart_descriptor, unsigned char buffer)
+Connection::write_uart(int uart_descriptor, unsigned char buffer[], int size)
 {
-	if (write(uart_descriptor, &buffer, sizeof(buffer)) < 0)
+	if (write(uart_descriptor, buffer, size) < 0)
 	{
 		close(uart_descriptor);
 		return -1;
